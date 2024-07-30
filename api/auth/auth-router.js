@@ -5,7 +5,7 @@ const jwt = require ('jsonwebtoken')
 const secret = process.env.SECRET || 'shh';
 
 router.post('/register', async (req, res) => {
-  res.end('implement register, please!');
+  // res.end('implement register, please!');
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -31,30 +31,33 @@ router.post('/register', async (req, res) => {
     4- On FAILED registration due to the `username` being taken,
       the response body should include a string exactly as follows: "username taken".
   */
-      const { username, password } = req.body;
-      const hash = bcrypt.hashSync(password, 2^8)
+      const user = req.body;
+      const hash = bcrypt.hashSync(user.password, 8)
+      user.password = hash
 
-      if (!username || !password) {
+
+      const [id] = await db('users').insert(user);
+        const newUser = await db('users').where({ id }).first();
+        res.status(201).json(newUser)
+      
+        if (!user) {
         return res.status(400).json({ message: "username and password required" });
       }
     
       try {
-        const userExists = await db('users').where({ username }).first();
+        const userExists = await db('users').where({ user }).first();
     
         if (userExists) {
           return res.status(400).json({ message: "username taken" });
         }
-        const [id] = await db('users').insert({ username, password: hash });
-        const newUser = await db('users').where({ id }).first();
     
-        res.status(201).json(newUser);
       } catch (err) {
         res.status(500).json({ message: 'Error registering user', error: err.message });
       }
 });
 
 router.post('/login', async (req, res) => {
-  res.end('implement login, please!');
+  // res.end('implement login, please!');
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -79,14 +82,9 @@ router.post('/login', async (req, res) => {
       the response body should include a string exactly as follows: "invalid credentials".
   */
       const { username, password } = req.body;
-
-      if (!username || !password) {
-        return res.status(400).json({ message: "username and password required" });
-      }
-    
+       
       try {
         const user = await db('users').where({ username }).first();
-    
         if (user && bcrypt.compareSync(password, user.password)) {
           const token = generateToken(user);
           res.status(200).json({ message: `welcome, ${username}`, token });
@@ -96,6 +94,13 @@ router.post('/login', async (req, res) => {
       } catch (err) {
         res.status(500).json({ message: 'Error logging in', error: err.message });
       }
+
+      if (!username || !password) {
+        return res.status(400).json({ message: "username and password required" });
+      }
+    
+      
+    
     });
     
     function generateToken(user) {
